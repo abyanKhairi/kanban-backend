@@ -16,35 +16,35 @@ class BoardController extends Controller
     public function index()
     {
         $user = auth()->user();
-    
+
         if (!$user) {
             return response()->json([
-                "status"=> 400,
+                "status" => 400,
                 "success" => false,
-                "message"=> "User Belum Login",
+                "message" => "User Belum Login",
             ], 400);
         }
-    
-        $boards = Board::whereHas('permission', function ($query) use ($user) {
+
+        $boards = Board::with('column')->whereHas('permission', function ($query) use ($user) {
             $query->where('user_id', $user->id);
         })->latest()->get();
-    
+
         if ($boards->isEmpty()) {
             return response()->json([
-                "status"=> 404,
+                "status" => 404,
                 "success" => false,
                 "message" => "Data Board Tidak Ada atau User Tidak Memiliki Permission",
             ], 404);
         }
-    
+
         return response()->json([
-            "status"=> 200,
+            "status" => 200,
             "success" => true,
-            "message"=> "Data Board",
-            "data"=> $boards
+            "message" => "Data Board",
+            "data" => $boards
         ], 200);
     }
-    
+
 
     /**
      * Store a newly created resource in storage.
@@ -52,8 +52,8 @@ class BoardController extends Controller
     public function store(Request $request)
     {
         $validator =  Validator::make($request->all(), [
-            "name"=> "required",
-            "status"=> "required",
+            "name" => "required",
+            "status" => "required",
         ]);
 
         if ($validator->fails()) {
@@ -64,39 +64,39 @@ class BoardController extends Controller
 
         if (!$user) {
             return response()->json([
-                "status"=> 400,
-                "success"=> false,
-                "massage"=> "User Belum Login, User Tidak Dapat Menambahkan Board",
+                "status" => 400,
+                "success" => false,
+                "massage" => "User Belum Login, User Tidak Dapat Menambahkan Board",
             ]);
         }
 
         $board = $user->board()->create([
-            "name"=> $request->name,
-            "status"=> $request->status,
+            "name" => $request->name,
+            "status" => $request->status,
         ]);
 
         if (!$board) {
             return response()->json([
-                "status"=> 400,
-                "success"=> false,
-                "massage"=> "Gagal Menginputkan Data Board",
+                "status" => 400,
+                "success" => false,
+                "massage" => "Gagal Menginputkan Data Board",
             ]);
         }
 
         $permission = Permission::create([
-            "user_id"=> $user->id,
-            "board_id"=> $board->id,
-            "edit_cards"=> true,
-            "delete_cards"=> true,
-            "add_cards"=> true,
-            "add_members"=> true,
-            "manage_board"=> true,
+            "user_id" => $user->id,
+            "board_id" => $board->id,
+            "edit_cards" => true,
+            "delete_cards" => true,
+            "add_cards" => true,
+            "add_members" => true,
+            "manage_board" => true,
         ]);
 
         return response()->json([
-            "status"=> 200,
-            "success"=> true,
-            "data"=> $board,
+            "status" => 200,
+            "success" => true,
+            "data" => $board,
             "permission" => $permission,
         ]);
     }
@@ -110,7 +110,7 @@ class BoardController extends Controller
     public function show(Board $board)
     {
         $user = auth()->user();
-    
+
         if (!$user) {
             return response()->json([
                 "status" => 400,
@@ -118,7 +118,7 @@ class BoardController extends Controller
                 "message" => "User Belum Login, Tidak Dapat Mengakses Board",
             ]);
         }
-    
+
         if (!$user->board()->where('id', $board->id)->exists()) {
             return response()->json([
                 "status" => 404,
@@ -126,14 +126,14 @@ class BoardController extends Controller
                 "message" => "Board Tidak Ditemukan",
             ]);
         }
-    
+
         return response()->json([
             "status" => 200,
             "success" => true,
             "data" => $board,
         ]);
     }
-    
+
 
 
     /**
@@ -142,8 +142,8 @@ class BoardController extends Controller
     public function update(Request $request, Board $board)
     {
         $validator =  Validator::make($request->all(), [
-            "name"=> "required",
-            "status"=> "required",
+            "name" => "required",
+            "status" => "required",
         ]);
 
         if ($validator->fails()) {
@@ -154,9 +154,9 @@ class BoardController extends Controller
 
         if (!$user) {
             return response()->json([
-                "status"=> 400,
-                "success"=> false,
-                "massage"=> "User Belum Login, User Tidak Dapat Mengupdate Board",
+                "status" => 400,
+                "success" => false,
+                "massage" => "User Belum Login, User Tidak Dapat Mengupdate Board",
             ], 400);
         }
 
@@ -171,9 +171,9 @@ class BoardController extends Controller
 
         if (!$board) {
             return response()->json([
-                "status"=> 404,
-                "success"=> false,
-                "massage"=> "Board Tidak Ditemukan",
+                "status" => 404,
+                "success" => false,
+                "massage" => "Board Tidak Ditemukan",
             ], 404);
         }
 
@@ -182,23 +182,33 @@ class BoardController extends Controller
         $board->save();
 
         return response()->json([
-            "status"=> 200,
-            "success"=> true,
-            "massage"=> "Data Board Berhasil Diupdate",
-            "data"=> $board,
+            "status" => 200,
+            "success" => true,
+            "massage" => "Data Board Berhasil Diupdate",
+            "data" => $board,
         ], 200);
     }
 
 
-    public function addMember(Board $board, Request $request){
+    public function addMember(Board $board, Request $request)
+    {
+
+        $validator =  Validator::make($request->all(), [
+            "email" => "required|email",
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([$validator->messages()], 422);
+        }
+
         $user = auth("")->user();
 
 
         if (!$user) {
             return response()->json([
-                "status"=> 400,
-                "success"=> false,
-                "massage"=> "User Belum Login, User Tidak Dapat Mengupdate Board",
+                "status" => 400,
+                "success" => false,
+                "massage" => "User Belum Login, User Tidak Dapat Mengupdate Board",
             ], 400);
         }
 
@@ -215,29 +225,28 @@ class BoardController extends Controller
         $member = User::where('email', $request->email)->first();
         if (!$member) {
             return response()->json([
-                "status"=> 404,
-                "success"=> false,
-                "massage"=> "User Tidak Ditemukan",
+                "status" => 404,
+                "success" => false,
+                "massage" => "User Tidak Ditemukan",
             ], 404);
         }
 
         $permission = Permission::create([
-            "user_id"=> $member->id,
-            "board_id"=> $board->id,
-            "edit_cards"=> true,
-            "delete_cards"=> true,
-            "add_cards"=> true,
-            "add_members"=> false,
-            "manage_board"=> false,
+            "user_id" => $member->id,
+            "board_id" => $board->id,
+            "edit_cards" => true,
+            "delete_cards" => true,
+            "add_cards" => true,
+            "add_members" => false,
+            "manage_board" => false,
         ]);
 
         return response()->json([
-            "status"=> 200,
-            "success"=> true,
-            "massage"=> "Member Berhasil Ditambahkan",
-            "data"=> $member,
+            "status" => 200,
+            "success" => true,
+            "massage" => "Member Berhasil Ditambahkan",
+            "data" => $member,
         ], 200);
-
     }
 
 
@@ -256,8 +265,8 @@ class BoardController extends Controller
             ]);
         }
 
-        
-    
+
+
         if (!$user->permission()->where('board_id', $board->id)->where('manage_board', 1)->exists()) {
             return response()->json([
                 "status" => 404,
@@ -265,9 +274,9 @@ class BoardController extends Controller
                 "message" => "User Tidak Memiliki Akses Untuk menghapus board",
             ]);
         }
-    
+
         $board->delete();
-    
+
         return response()->json([
             "status" => 200,
             "success" => true,

@@ -1,0 +1,157 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Board;
+use App\Models\column;
+use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
+
+class ColumnController extends Controller
+{
+    /**
+     * Display a listing of the resource.
+     */
+    public function index()
+    {
+        $user = auth()->user();
+
+        if (!$user) {
+            if (!$user) {
+                return response()->json([
+                    "status" => 400,
+                    "success" => false,
+                    "message" => "User Belum Login, Tidak Dapat Mengakses Board",
+                ]);
+            }
+        }
+
+        // $columns = column::
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(Request $request, Board $board)
+    {
+
+        $validator =  Validator::make($request->all(), [
+            "name" => "required",
+            "position" => "required",
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([$validator->messages()], 422);
+        }
+
+        $user = auth()->user();
+
+        if (!$user) {
+            if (!$user) {
+                return response()->json([
+                    "status" => 400,
+                    "success" => false,
+                    "message" => "User Belum Login, Tidak Dapat Mengakses Board",
+                ]);
+            }
+        }
+
+        $userPermission = $user->permission()->where('board_id', $board->id)->where('manage_board', true)->exists();
+
+        if (!$userPermission) {
+            return response()->json([
+                'status' => 400,
+                'success' => false,
+                'message' => 'Tidak Memiliki Akses Untuk Menambah Column',
+            ], 400);
+        }
+
+
+        $column = column::create([
+            'name' => $request->name,
+            'position' => $request->position,
+            'board_id' => $board->id,
+        ]);
+
+        return response()->json([
+            'status' => 200,
+            'success' => true,
+            'message' => ' Column Berhasil Ditambahakn ',
+            'data' => $column,
+        ], 200);
+    }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show(column $column)
+    {
+        //
+    }
+
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, column $column)
+    {
+
+        $validator =  Validator::make($request->all(), [
+            "name" => "required",
+            "board_id" => "required|exists:boards,id",
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([$validator->messages()], 422);
+        }
+
+        $user = auth()->user();
+
+        if (!$user) {
+            if (!$user) {
+                return response()->json([
+                    "status" => 400,
+                    "success" => false,
+                    "message" => "User Belum Login, Tidak Dapat Mengakses Board",
+                ]);
+            }
+        }
+
+
+        $userPermission = $user->permission()->where('board_id', $request->board_id)->where('manage_board', true)->exists();
+
+        if (!$userPermission) {
+            return response()->json([
+                'status' => 400,
+                'success' => false,
+                'message' => 'Tidak Memiliki Akses Untuk Menambah Column',
+            ], 400);
+        }
+
+        $column->name = $request->name;
+        // $column->position = $request->position;
+        $column->save();
+
+        return response()->json([
+            'status' => 200,
+            'success' => true,
+            'message' => 'Column Berhasil Diupdate',
+            'data' => $column,
+        ], 200);
+    }
+
+
+    public function position()
+    {
+        $user = auth()->user();
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(column $column)
+    {
+        //
+    }
+}

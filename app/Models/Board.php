@@ -20,4 +20,8 @@ class Board extends Model
     public function permission(){
         return $this->hasMany(Permission::class);
     }
+
+    public function column(){
+        return $this->hasMany(column::class);
+    }  
 }
