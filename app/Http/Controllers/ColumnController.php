@@ -142,9 +142,47 @@ class ColumnController extends Controller
     }
 
 
-    public function position()
+    public function position(Request $request, column $column)
     {
+        $validator =  Validator::make($request->all(), [
+            "position" => "required",
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([$validator->messages()], 422);
+        }
+
         $user = auth()->user();
+
+        if (!$user) {
+            if (!$user) {
+                return response()->json([
+                    "status" => 400,
+                    "success" => false,
+                    "message" => "User Belum Login",
+                ]);
+            }
+        }
+
+        $userPermission = $user->permission()->where('board_id', $column->board_id)->where('manage_board', 1)->exists();
+
+        if (!$userPermission) {
+            return response()->json([
+                'status' => 400,
+                'success' => false,
+                'message' => 'Tidak Memiliki Akses Untuk Memindahkan Column',
+            ], 400);
+        }
+
+        $column->position = $request->position;
+        $column->save();
+
+        return response()->json([
+            'status' => 200,
+            'success' => true,
+            'message' => 'Column Berhasil Diupdate',
+            'data' => $column,
+        ], 200);
     }
 
     /**
@@ -152,6 +190,32 @@ class ColumnController extends Controller
      */
     public function destroy(column $column)
     {
-        //
+        $user = auth()->user();
+
+        if (!$user) {
+            return response()->json([
+                "status" => 400,
+                "success" => false,
+                "message" => "User Belum Login, User Tidak Dapat Menghapus Board",
+            ]);
+        }
+
+
+
+        if (!$user->permission()->where('board_id', $column->board_id)->where('manage_board', 1)->exists()) {
+            return response()->json([
+                "status" => 404,
+                "success" => false,
+                "message" => "User Tidak Memiliki Akses Untuk menghapus Column",
+            ]);
+        }
+
+        $column->delete();
+
+        return response()->json([
+            "status" => 200,
+            "success" => true,
+            "message" => "Column Berhasil Dihapus",
+        ]);
     }
 }

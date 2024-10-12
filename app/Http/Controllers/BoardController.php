@@ -267,7 +267,7 @@ class BoardController extends Controller
 
 
 
-        if (!$user->permission()->where('board_id', $board->id)->where('manage_board', 1)->exists()) {
+        if (!$user->permission()->where('board_id', $board->id)->where('manage_board', 1)->exists() && $user->id !== $board->user_id) {
             return response()->json([
                 "status" => 404,
                 "success" => false,

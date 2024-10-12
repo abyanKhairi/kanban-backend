@@ -55,5 +55,7 @@ Route::group(
     function ($router) {
         Route::post('column/{board}', [ColumnController::class, 'store']);
         Route::put('column-update/{column}', [ColumnController::class, 'update']);
+        Route::put('column-position/{column}', [ColumnController::class, 'position']);
+        Route::delete('column-delete/{column}', [ColumnController::class, 'destroy']);
     }
 );
