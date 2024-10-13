@@ -9,10 +9,18 @@ class column extends Model
 {
     use HasFactory;
     protected $fillable = [
-        "name",'board_id','position',
-    ] ;
+        "name",
+        'board_id',
+        'position',
+    ];
 
-    public function board(){
+    public function board()
+    {
         return $this->belongsTo(Board::class);
+    }
+
+    public function task()
+    {
+        return $this->hasMany(Task::class);
     }
 }

@@ -16,7 +16,7 @@ return new class extends Migration
             // $table->unsignedBigInteger('user_id')->after('id');
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete()->cascadeOnUpdate();
             $table->string('name');
-            $table->enum('status', ['private','public']);
+            $table->enum('status', ['private', 'public'])->default('private');
             $table->timestamps();
         });
     }

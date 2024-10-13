@@ -82,13 +82,6 @@ class ColumnController extends Controller
         ], 200);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(column $column)
-    {
-        //
-    }
 
 
     /**
