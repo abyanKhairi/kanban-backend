@@ -13,7 +13,34 @@ class TaskController extends Controller
      */
     public function index()
     {
-        //
+        $user = auth()->user();
+
+        if (!$user) {
+            return response()->json([
+                "status" => 400,
+                "success" => false,
+                "message" => "User Belum Login",
+            ], 400);
+        }
+
+        $tasks = Task::whereHas('column.board.permission', function ($query) use ($user) {
+            $query->where('user_id', $user->id);
+        })->latest()->get();
+
+        if ($tasks->isEmpty()) {
+            return response()->json([
+                "status" => 404,
+                "success" => false,
+                "message" => "Data Task Tidak Ada atau User Tidak Memiliki Permission",
+            ], 404);
+        }
+
+        return response()->json([
+            "status" => 200,
+            "success" => true,
+            "message" => "Data Tasks",
+            "data" => $tasks
+        ], 200);
     }
 
     /**
@@ -37,6 +64,16 @@ class TaskController extends Controller
                 "status" => 400,
                 "success" => false,
                 "massage" => "User Belum Login, User Tidak Dapat Menambahkan Board",
+            ]);
+        }
+
+        $permissionUser = $user->permission()->where("add_cards", 1)->exists();
+        $isBoardManager = $user->permission()->where("manage_board", 1)->exists();
+        if (!$permissionUser || !$isBoardManager) {
+            return response()->json([
+                "status" => 400,
+                "success" => false,
+                "Pesan" => "Tidak Memiliki Akses Untuk Menambahkan task",
             ]);
         }
 
@@ -88,7 +125,17 @@ class TaskController extends Controller
             return response()->json([
                 "status" => 400,
                 "success" => false,
-                "massage" => "User Belum Login, User Tidak Dapat Menambahkan Board",
+                "massage" => "User Belum Login",
+            ]);
+        }
+
+        $permissionUser = $user->permission()->where("edit_cards", 1)->exists();
+        $isBoardManager = $user->permission()->where("manage_board", 1)->exists();
+        if ($task->user_id !== $user->id || !$permissionUser || !$isBoardManager) {
+            return response()->json([
+                "status" => 400,
+                "success" => false,
+                "Pesan" => "Task Yang Ingin Diupdate Tidak Ada, Atau User Tidak Memiliki Akses Untuk Mengupdate Task",
             ]);
         }
 
@@ -108,11 +155,124 @@ class TaskController extends Controller
         // $task->column_id = $request->column_id;
     }
 
+
+    public function position(Request $request, Task $task)
+    {
+        $validator = Validator::make($request->all(), [
+            "position" => "required",
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json($validator->messages(), 422);
+        }
+
+        $user = auth("")->user();
+
+        $permissionUser = $user->permission()->where("manage_board", 1)->exists();
+
+        if ($task->user_id !== $user->id && !$permissionUser) {
+            return response()->json([
+                "status" => 400,
+                "success" => false,
+                "Massage" => "Posisi Tidak Bisa Diubah",
+            ], 400);
+        };
+        $task->position = $request->position;
+        $task->save();
+        return response()->json([
+            "status" => 200,
+            "success" => true,
+            "Massage" => "Posisi Task Berhasi Diubah",
+            "data" => $task
+        ]);
+    }
+
+
+    public function column(Request $request, Task $task)
+    {
+
+        if (!$task) {
+            return response()->json([
+                "status" => 404,
+                "success" => false,
+                "massage" => "Task Tidak Ada",
+            ], 404);
+        }
+
+        $validator = Validator::make($request->all(), [
+            "column_id" => "exists:columns,id",
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json($validator->messages(), 422);
+        }
+
+        $user = auth("")->user();
+
+        $permissionUser = $user->permission()->where("manage_board", 1)->exists();
+
+        if ($task->user_id !== $user->id && !$permissionUser) {
+            return response()->json([
+                "status" => 400,
+                "success" => false,
+                "massage" => "Tidak Dapat Memindahkan Task Ke Column Lain, Cihuyy",
+            ]);
+        }
+
+        $taskColumn = $task->update([
+            'column_id' => $request->column_id,
+        ]);
+
+        return response()->json([
+            "status" => 200,
+            "success" => true,
+            "message" => "Task berhasil dipindahkan ke kolom lain",
+            "data" => $taskColumn
+        ], 200);
+    }
+
+
     /**
      * Remove the specified resource from storage.
      */
     public function destroy(Task $task)
     {
-        //
+        $user = auth("api")->user();
+
+        if (!$user) {
+            return response()->json([
+                "status" => 400,
+                "success" => false,
+                "massage" => "User Belum Login, User Tidak Dapat Menambahkan Board",
+            ]);
+        }
+
+        if (!$task) {
+            return response()->json([
+                "status" => 400,
+                "success" => false,
+                "Pesan" => "Task Yang Ingin dihapus tidak ada",
+            ]);
+        }
+
+        $permissionUser = $user->permission()->where("delete_cards", 1)->exists();
+        $isBoardManager = $user->permission()->where("manage_board", 1)->exists();
+
+        if ($task->user_id !== $user->id || !$permissionUser || !$isBoardManager) {
+            return response()->json([
+                "status" => 400,
+                "success" => false,
+                "Pesan" => "Task Yang Ingin dihapus tidak ada, Atau User Tidak Memiliki akses untuk menghapus Task",
+            ]);
+        }
+
+
+        $task->delete();
+
+        return response()->json([
+            "status" => 200,
+            "success" => true,
+            "message" => "Task Berhasil Dihapus",
+        ]);
     }
 }

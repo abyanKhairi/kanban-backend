@@ -18,16 +18,31 @@ class ColumnController extends Controller
         $user = auth()->user();
 
         if (!$user) {
-            if (!$user) {
-                return response()->json([
-                    "status" => 400,
-                    "success" => false,
-                    "message" => "User Belum Login, Tidak Dapat Mengakses Board",
-                ]);
-            }
+            return response()->json([
+                "status" => 400,
+                "success" => false,
+                "message" => "User Belum Login",
+            ], 400);
         }
 
-        // $columns = column::
+        $columns = column::with('task')->whereHas('board.permission', function ($query) use ($user) {
+            $query->where('user_id', $user->id);
+        })->latest()->get();
+
+        if ($columns->isEmpty()) {
+            return response()->json([
+                "status" => 404,
+                "success" => false,
+                "message" => "Data Board Tidak Ada atau User Tidak Memiliki Permission",
+            ], 404);
+        }
+
+        return response()->json([
+            "status" => 200,
+            "success" => true,
+            "message" => "Data Columns",
+            "data" => $columns
+        ], 200);
     }
 
     /**

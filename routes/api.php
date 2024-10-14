@@ -54,6 +54,7 @@ Route::group(
         'prefix' => 'kanban/board'
     ],
     function ($router) {
+        Route::get('column', [ColumnController::class, 'index']);
         Route::post('column/{board}', [ColumnController::class, 'store']);
         Route::put('column-update/{column}', [ColumnController::class, 'update']);
         Route::put('column-position/{column}', [ColumnController::class, 'position']);
@@ -67,7 +68,11 @@ Route::group(
         'prefix' => 'kanban/board/column-task'
     ],
     function ($router) {
+        Route::get('task-list', [TaskController::class, 'index']);
         Route::post('task', [TaskController::class, 'store']);
         Route::put('task-update/{task}', [TaskController::class, 'update']);
+        Route::put('task-position/{task}', [TaskController::class, 'position']);
+        Route::put('task-column/{task}', [TaskController::class, 'column']);
+        Route::delete('task-delete/{task}', [TaskController::class, 'destroy']);
     }
 );
