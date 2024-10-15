@@ -21,10 +21,11 @@ class AuthController extends Controller
     }
 
 
-    public function register(){
+    public function register()
+    {
         $validator = Validator::make(request()->all(), [
             'email' => 'required|email|unique:users',
-            'password' => 'required|confirmed',
+            'password' => 'required',
             'name' => 'required',
         ]);
 
@@ -33,27 +34,27 @@ class AuthController extends Controller
         }
 
         $user = User::create([
-            'email'=> request('email'),
-            'password'=> Hash::make(request('password')),
-            'name'=> request('name'),
+            'email' => request('email'),
+            'password' => Hash::make(request('password')),
+            'name' => request('name'),
         ]);
 
         if (!$user) {
             return response()->json([
                 "status" => 422,
                 "success" => false,
-                "message"=> "Pendaftaran Yang Dilakukan Gagal",
+                "message" => "Pendaftaran Yang Dilakukan Gagal",
                 "data" => $user,
-            ],422);
+            ], 422);
         }
 
 
         return response()->json([
             "status" => 200,
-            "success"=> true,
-            "message"=> "User Berhasil Melakukan Pendaftaran",
+            "success" => true,
+            "message" => "User Berhasil Melakukan Pendaftaran",
             "data" => $user,
-        ],200);
+        ], 200);
     }
 
     /**
@@ -80,22 +81,21 @@ class AuthController extends Controller
     public function me()
     {
 
-        if(auth()->user()) {
-        return response()->json([
-            "status" => 200,
-            "success"=> true,
-            "message"=> "Data User",
-            "data" => auth()->user()
-        ], 200);
-    }
+        if (auth()->user()) {
+            return response()->json([
+                "status" => 200,
+                "success" => true,
+                "message" => "Data User",
+                "data" => auth()->user()
+            ], 200);
+        }
 
         return response()->json([
-            "status"=> 404,
-            "success"=> false,
-            "message"=> "User Tidak",
+            "status" => 404,
+            "success" => false,
+            "message" => "User Tidak",
         ]);
-
-}
+    }
 
     /**
      * Log the user out (Invalidate the token).
@@ -108,8 +108,9 @@ class AuthController extends Controller
 
         return response()->json([
             'status' => 200,
-            'success'=> true,
-            'message' => 'Successfully logged out']);
+            'success' => true,
+            'message' => 'Successfully logged out'
+        ]);
     }
 
     /**
@@ -132,10 +133,10 @@ class AuthController extends Controller
     protected function respondWithToken($token)
     {
         return response()->json([
-            'status'=> 200,
-            'success'=> true,
-            'message'=> "User Berhasil Login",
-            'access_token' => $token,
+            'status' => 200,
+            'success' => true,
+            'message' => "User Berhasil Login",
+            'token' => $token,
             'token_type' => 'bearer',
             'expires_in' => auth()->factory()->getTTL() * 60
         ]);

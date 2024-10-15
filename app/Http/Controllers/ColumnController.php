@@ -6,6 +6,7 @@ use App\Models\Board;
 use App\Models\column;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
 class ColumnController extends Controller
@@ -27,7 +28,15 @@ class ColumnController extends Controller
 
         $columns = column::with('task')->whereHas('board.permission', function ($query) use ($user) {
             $query->where('user_id', $user->id);
-        })->latest()->get();
+        })->orderBy('position', 'asc')->get();
+
+        if (!$columns) {
+            return response()->json([
+                "status" => 404,
+                "success" => false,
+                "message" => "Data Board Tidak Ada atau User Tidak Memiliki Permission",
+            ], 404);
+        }
 
         if ($columns->isEmpty()) {
             return response()->json([
@@ -105,6 +114,7 @@ class ColumnController extends Controller
     public function update(Request $request, column $column)
     {
 
+        Log::info('Request data: ', $request->all());
         $validator =  Validator::make($request->all(), [
             "name" => "required",
             "board_id" => "required|exists:boards,id",
