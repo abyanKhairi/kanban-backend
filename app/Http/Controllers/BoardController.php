@@ -83,6 +83,18 @@ class BoardController extends Controller
             ]);
         }
 
+        $listTitle = ['Backlog', 'To Do', 'Doing', 'Done'];
+
+        $posisi = 1;
+        foreach ($listTitle as  $title) {
+            $board->column()->create([
+                'name' => $title,
+                'board_id' => $board->id,
+                'position' =>  $posisi,
+            ]);
+            $posisi++;
+        }
+
         $permission = Permission::create([
             "user_id" => $user->id,
             "board_id" => $board->id,
@@ -234,9 +246,9 @@ class BoardController extends Controller
         $permission = Permission::create([
             "user_id" => $member->id,
             "board_id" => $board->id,
-            "edit_cards" => true,
-            "delete_cards" => true,
-            "add_cards" => true,
+            "edit_cards" => false,
+            "delete_cards" => false,
+            "add_cards" => false,
             "add_members" => false,
             "manage_board" => false,
         ]);
