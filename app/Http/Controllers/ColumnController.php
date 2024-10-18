@@ -98,6 +98,8 @@ class ColumnController extends Controller
             'board_id' => $board->id,
         ]);
 
+        $board->touch();
+
         return response()->json([
             'status' => 200,
             'success' => true,
@@ -150,6 +152,7 @@ class ColumnController extends Controller
         $column->name = $request->name;
         // $column->position = $request->position;
         $column->save();
+        $column->board()->touch();
 
         return response()->json([
             'status' => 200,
@@ -194,6 +197,8 @@ class ColumnController extends Controller
 
         $column->position = $request->position;
         $column->save();
+
+        $column->board()->touch();
 
         return response()->json([
             'status' => 200,

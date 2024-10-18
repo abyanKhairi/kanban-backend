@@ -10,18 +10,23 @@ class Board extends Model
     use HasFactory;
 
     protected $fillable = [
-        "name","status","user_id",
-    ] ;  
+        "name",
+        "status",
+        "user_id",
+    ];
 
-    public function user(){
+    public function user()
+    {
         return $this->belongsTo(User::class);
     }
 
-    public function permission(){
+    public function permission()
+    {
         return $this->hasMany(Permission::class);
     }
 
-    public function column(){
+    public function columns()
+    {
         return $this->hasMany(column::class);
-    }  
+    }
 }

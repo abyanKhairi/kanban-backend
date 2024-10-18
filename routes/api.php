@@ -47,6 +47,7 @@ Route::group([
     Route::put('board-update/{board}', [BoardController::class, 'update']);
     Route::delete('board-delete/{board}', [BoardController::class, 'destroy']);
     Route::get('board-show/{board}', [BoardController::class, 'show']);
+    Route::get('board-four', [BoardController::class, 'showFourBoard']);
 });
 
 Route::group(
