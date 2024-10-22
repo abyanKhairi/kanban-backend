@@ -14,7 +14,7 @@ class ColumnController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Board $board)
     {
         $user = auth()->user();
 
@@ -26,7 +26,7 @@ class ColumnController extends Controller
             ], 400);
         }
 
-        $columns = column::with('task')->whereHas('board.permission', function ($query) use ($user) {
+        $columns = column::with('task')->where('board_id', $board->id)->whereHas('board.permission', function ($query) use ($user) {
             $query->where('user_id', $user->id);
         })->orderBy('position', 'asc')->get();
 

@@ -50,7 +50,8 @@ class TaskController extends Controller
     {
         $validator =  Validator::make($request->all(), [
             "title" => "required",
-            "column_id" => "required|exists:columns,id"
+            "column_id" => "required|exists:columns,id",
+            "position" => "required",
         ]);
 
         if ($validator->fails()) {
@@ -80,6 +81,7 @@ class TaskController extends Controller
         $task = $user->task()->create([
             "title" => $request->title,
             "column_id" => $request->column_id,
+            "position" => $request->position
         ]);
 
         return response()->json([

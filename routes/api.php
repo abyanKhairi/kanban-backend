@@ -56,7 +56,7 @@ Route::group(
         'prefix' => 'kanban/board'
     ],
     function ($router) {
-        Route::get('column', [ColumnController::class, 'index']);
+        Route::get('column-list/{board}', [ColumnController::class, 'index']);
         Route::post('column/{board}', [ColumnController::class, 'store']);
         Route::put('column-update/{column}', [ColumnController::class, 'update']);
         Route::put('column-position/{column}', [ColumnController::class, 'position']);
