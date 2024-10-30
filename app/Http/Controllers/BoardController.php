@@ -269,7 +269,8 @@ class BoardController extends Controller
             ], 400);
         }
 
-        if (!$user->permission()->where('board_id', $board->id)->where('manage_board', 1)->exists()) {
+
+        if (!$user->permission()->where('board_id', $board->id)->where('manage_board', 1)->exists() && !$user->permission()->where('board_id', $board->id)->where('add_members', 1)->exists()) {
             return response()->json([
                 "status" => 404,
                 "success" => false,

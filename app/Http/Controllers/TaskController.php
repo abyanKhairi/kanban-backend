@@ -46,7 +46,7 @@ class TaskController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(Request $request, $board_id)
     {
         $validator =  Validator::make($request->all(), [
             "title" => "required",
@@ -68,9 +68,9 @@ class TaskController extends Controller
             ]);
         }
 
-        $permissionUser = $user->permission()->where("add_cards", 1)->exists();
-        $isBoardManager = $user->permission()->where("manage_board", 1)->exists();
-        if (!$permissionUser || !$isBoardManager) {
+        $permissionUser = $user->permission()->where("add_cards", 1)->where("board_id", $board_id)->exists();
+        $isBoardManager = $user->permission()->where("manage_board", 1)->where("board_id", $board_id)->exists();
+        if (!$permissionUser && !$isBoardManager && $permissionUser) {
             return response()->json([
                 "status" => 400,
                 "success" => false,
@@ -157,7 +157,7 @@ class TaskController extends Controller
     // }
 
 
-    public function update(Request $request, Task $task)
+    public function update(Request $request, $board_id, Task $task)
     {
         $validator = Validator::make($request->all(), [
             "title" => "required",
@@ -180,9 +180,9 @@ class TaskController extends Controller
             ]);
         }
 
-        $permissionUser = $user->permission()->where("edit_cards", 1)->exists();
-        $isBoardManager = $user->permission()->where("manage_board", 1)->exists();
-        if ($task->user_id !== $user->id || !$permissionUser || !$isBoardManager) {
+        $permissionUser = $user->permission()->where("board_id", $board_id)->where("edit_cards", 1)->exists();
+        $isBoardManager = $user->permission()->where("board_id", $board_id)->where("manage_board", 1)->exists();
+        if ($task->user_id !== $user->id && !$permissionUser && !$isBoardManager) {
             return response()->json([
                 "status" => 400,
                 "success" => false,
@@ -214,7 +214,7 @@ class TaskController extends Controller
 
 
 
-    public function position(Request $request, Task $task)
+    public function position(Request $request, $board_id, Task $task)
     {
         $validator = Validator::make($request->all(), [
             "position" => "required",
@@ -226,7 +226,7 @@ class TaskController extends Controller
 
         $user = auth("")->user();
 
-        $permissionUser = $user->permission()->where("manage_board", 1)->exists();
+        $permissionUser = $user->permission()->where("manage_board", 1)->where("board_id", $board_id)->exists();
 
         if ($task->user_id !== $user->id && !$permissionUser) {
             return response()->json([
@@ -249,7 +249,7 @@ class TaskController extends Controller
     }
 
 
-    public function column(Request $request, Task $task)
+    public function column(Request $request, $board_id, Task $task,)
     {
 
         if (!$task) {
@@ -270,7 +270,7 @@ class TaskController extends Controller
 
         $user = auth("")->user();
 
-        $permissionUser = $user->permission()->where("manage_board", 1)->exists();
+        $permissionUser = $user->permission()->where("manage_board", 1)->where("board_id", $board_id)->exists();
 
         if ($task->user_id !== $user->id && !$permissionUser) {
             return response()->json([
@@ -298,9 +298,9 @@ class TaskController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Task $task)
+    public function destroy($board_id, Task $task)
     {
-        $user = auth("api")->user();
+        $user = auth("")->user();
 
         if (!$user) {
             return response()->json([
@@ -318,10 +318,10 @@ class TaskController extends Controller
             ]);
         }
 
-        $permissionUser = $user->permission()->where("delete_cards", 1)->exists();
-        $isBoardManager = $user->permission()->where("manage_board", 1)->exists();
+        $permissionUser = $user->permission()->where("delete_cards", 1)->where("board_id", $board_id)->exists();
+        $isBoardManager = $user->permission()->where("manage_board", 1)->where("board_id", $board_id)->exists();
 
-        if ($task->user_id !== $user->id || !$permissionUser || !$isBoardManager) {
+        if ($task->user_id !== $user->id && !$permissionUser && !$isBoardManager) {
             return response()->json([
                 "status" => 400,
                 "success" => false,
