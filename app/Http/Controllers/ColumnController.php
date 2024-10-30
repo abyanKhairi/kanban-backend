@@ -46,6 +46,8 @@ class ColumnController extends Controller
             ], 404);
         }
 
+        $board->touch();
+
         return response()->json([
             "status" => 200,
             "success" => true,
@@ -198,7 +200,7 @@ class ColumnController extends Controller
         $column->position = $request->position;
         $column->save();
 
-        $column->board()->touch();
+        // $column->board()->touch();
 
         return response()->json([
             'status' => 200,

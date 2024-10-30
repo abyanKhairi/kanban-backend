@@ -24,13 +24,18 @@ class AuthController extends Controller
     public function register()
     {
         $validator = Validator::make(request()->all(), [
-            'email' => 'required|email|unique:users',
-            'password' => 'required',
+            'email' => 'required|email|unique:users,email',
+            'password' => 'required|min:8|confirmed',
             'name' => 'required',
         ]);
 
         if ($validator->fails()) {
-            return response()->json($validator->messages(), 422);
+            return response()->json([
+                "status" => 422,
+                "success" => false,
+                "message" => "Validasi gagal",
+                "errors" => $validator->messages()
+            ], 422);
         }
 
         $user = User::create([
@@ -43,16 +48,15 @@ class AuthController extends Controller
             return response()->json([
                 "status" => 422,
                 "success" => false,
-                "message" => "Pendaftaran Yang Dilakukan Gagal",
-                "data" => $user,
+                "message" => "Pendaftaran yang dilakukan gagal",
+                "data" => null,
             ], 422);
         }
-
 
         return response()->json([
             "status" => 200,
             "success" => true,
-            "message" => "User Berhasil Melakukan Pendaftaran",
+            "message" => "User  berhasil melakukan pendaftaran",
             "data" => $user,
         ], 200);
     }
@@ -95,6 +99,119 @@ class AuthController extends Controller
             "success" => false,
             "message" => "User Tidak",
         ]);
+    }
+
+    public function updateName()
+    {
+        $validator = Validator::make(request()->all(), [
+            'name' => 'required|string|max:255',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json($validator->messages(), 422);
+        }
+
+        $user = auth()->user();
+        $user->name = request('name');
+        $user->save();
+
+        return response()->json([
+            'status' => 200,
+            'success' => true,
+            'message' => 'Name updated successfully',
+            'data' => $user,
+        ], 200);
+    }
+
+    public function updateEmail()
+    {
+        $user = auth()->user();
+
+        $validator = Validator::make(request()->all(), [
+            'email' => 'required|email|unique:users,email,' . $user->id,
+            'password' => 'required',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => 422,
+                'success' => false,
+                'message' => 'Validasi gagal',
+                'errors' => $validator->messages()
+            ], 422);
+        }
+
+        // Cek apakah password yang dimasukkan cocok dengan password yang ada di database
+        if (!Hash::check(request('password'), $user->password)) {
+            return response()->json([
+                'status' => 422,
+                'success' => false,
+                'message' => 'Password yang dimasukkan salah',
+            ], 422);
+        }
+
+        // Jika password cocok, lanjutkan dengan update email
+        $user->email = request('email');
+        $user->save();
+
+        return response()->json([
+            'status' => 200,
+            'success' => true,
+            'message' => 'Email berhasil diperbarui',
+            'data' => $user,
+        ], 200);
+    }
+
+    public function updatePassword()
+    {
+        // Validate the request
+        $validatedData = request()->validate([
+            'current_password' => 'required',
+            'new_password' => 'required|min:8|confirmed',
+        ]);
+
+        $user = auth()->user();
+
+        // Check if the current password is correct
+        if (!Hash::check($validatedData['current_password'], $user->password)) {
+            return response()->json([
+                'status' => 401,
+                'success' => false,
+                'message' => 'Password lama yang dimasukkan salah',
+            ], 401);
+        }
+
+        // Update the password
+        $user->update(['password' => Hash::make($validatedData['new_password'])]);
+
+        return response()->json([
+            'status' => 200,
+            'success' => true,
+            'message' => 'Password updated successfully',
+        ], 200);
+    }
+
+
+    public function updateAvatar()
+    {
+        $validator = Validator::make(request()->all(), [
+            'avatar' => 'required|max:255',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json($validator->messages(), 422);
+        }
+
+        $user = auth()->user();
+        $user->avatar = request('avatar');
+        $user->save();
+
+        return response()->json([
+            'status' => 200,
+            'success' => true,
+            'message' => 'Name updated successfully',
+            'data' => $user,
+        ], 200);
     }
 
     /**

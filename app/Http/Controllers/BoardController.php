@@ -18,25 +18,25 @@ class BoardController extends Controller
     {
         $user = auth()->user();
 
-        if (!$user) {
-            return response()->json([
-                "status" => 400,
-                "success" => false,
-                "message" => "User Belum Login",
-            ], 400);
-        }
+        // if (!$user) {
+        //     return response()->json([
+        //         "status" => 401,
+        //         "success" => false,
+        //         "message" => "User Belum Login",
+        //     ], 401);
+        // }
 
         $boards = Board::whereHas('permission', function ($query) use ($user) {
             $query->where('user_id', $user->id);
         })->orderBy('updated_at', 'desc')->get();
 
-        if ($boards->isEmpty()) {
-            return response()->json([
-                "status" => 404,
-                "success" => false,
-                "message" => "Data Board Tidak Ada atau User Tidak Memiliki Permission",
-            ], 404);
-        }
+        // if ($boards->isEmpty()) {
+        //     return response()->json([
+        //         "status" => 404,
+        //         "success" => false,
+        //         "message" => "Data Board Tidak Ada atau User Tidak Memiliki Permission",
+        //     ], 404);
+        // }
 
         return response()->json([
             "status" => 200,
@@ -251,8 +251,7 @@ class BoardController extends Controller
 
     public function addMember(Board $board, Request $request)
     {
-
-        $validator =  Validator::make($request->all(), [
+        $validator = Validator::make($request->all(), [
             "email" => "required|email",
         ]);
 
@@ -260,14 +259,13 @@ class BoardController extends Controller
             return response()->json([$validator->messages()], 422);
         }
 
-        $user = auth("")->user();
-
+        $user = auth()->user();
 
         if (!$user) {
             return response()->json([
                 "status" => 400,
                 "success" => false,
-                "massage" => "User Belum Login, User Tidak Dapat Mengupdate Board",
+                "message" => "User Belum Login, User Tidak Dapat Mengupdate Board",
             ], 400);
         }
 
@@ -279,15 +277,26 @@ class BoardController extends Controller
             ]);
         }
 
-
-
         $member = User::where('email', $request->email)->first();
+
         if (!$member) {
             return response()->json([
                 "status" => 404,
                 "success" => false,
-                "massage" => "User Tidak Ditemukan",
+                "message" => "User Tidak Ditemukan",
             ], 404);
+        }
+
+        $existingPermission = Permission::where('user_id', $member->id)
+            ->where('board_id', $board->id)
+            ->first();
+
+        if ($existingPermission) {
+            return response()->json([
+                "status" => 409,
+                "success" => false,
+                "message" => "User sudah merupakan anggota board ini",
+            ], 409);
         }
 
         $permission = Permission::create([
@@ -305,10 +314,11 @@ class BoardController extends Controller
         return response()->json([
             "status" => 200,
             "success" => true,
-            "massage" => "Member Berhasil Ditambahkan",
+            "message" => "Member Berhasil Ditambahkan",
             "data" => $member,
         ], 200);
     }
+
 
 
     /**

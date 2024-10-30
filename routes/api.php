@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BoardController;
 use App\Http\Controllers\ColumnController;
+use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\TaskController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -36,6 +37,20 @@ Route::group([
     Route::post('register', [AuthController::class, 'register']);
 });
 
+Route::group([
+
+    'middleware' => 'api',
+    'prefix' => 'profile'
+
+], function ($router) {
+
+
+    Route::put('name', [AuthController::class, 'UpdateName']);
+    Route::put('email', [AuthController::class, 'UpdateEmail']);
+    Route::put('password', [AuthController::class, 'UpdatePassword']);
+    Route::put('avatar', [AuthController::class, 'UpdateAvatar']);
+});
+
 
 Route::group([
     'middleware' => 'auth:api',
@@ -43,11 +58,11 @@ Route::group([
 ], function ($router) {
     Route::post('board', [BoardController::class, 'store']);
     Route::post('board-member/{board}', [BoardController::class, 'addMember']);
-    Route::get('board-list', [BoardController::class, 'index']);
     Route::put('board-update/{board}', [BoardController::class, 'update']);
     Route::delete('board-delete/{board}', [BoardController::class, 'destroy']);
     Route::get('board-show/{board}', [BoardController::class, 'show']);
     Route::get('board-four', [BoardController::class, 'showFourBoard']);
+    Route::get('board-list', [BoardController::class, 'index']);
 });
 
 Route::group(
@@ -76,5 +91,20 @@ Route::group(
         Route::put('task-position/{task}', [TaskController::class, 'position']);
         Route::put('task-column/{task}', [TaskController::class, 'column']);
         Route::delete('task-delete/{task}', [TaskController::class, 'destroy']);
+    }
+);
+
+Route::group(
+    [
+        'middleware' => 'auth:api',
+        'prefix' => 'kanban/board/'
+    ],
+    function ($router) {
+        Route::get('collaborator-permission/{board_id}', [PermissionController::class, 'show']);
+        Route::get('collaborator-board/{board_id}', [PermissionController::class, 'ShowOnBoard']);
+        Route::get('permissions/{board_id}', [PermissionController::class, 'getPermissions']);
+        Route::delete('{board_id}/permission/{permission_id}', [PermissionController::class, 'deleteUser']);
+        Route::put('permission-update/{permission}', [PermissionController::class, 'updatePermissions']);
+        // Route::get('{board_id}/collaborator-permission/{permission_id}', [PermissionController::class, 'CollaboratorPermission']);
     }
 );

@@ -19,7 +19,7 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->date('deadline')->nullable();
             $table->integer('position')->nullable();
-            $table->enum('status', ['Backlog', 'To Do', 'In Progress', 'Completed'])->default('Backlog');
+            $table->enum('status', ['To Do', 'In Progress', 'Completed'])->nullable();
             $table->timestamps();
         });
     }
