@@ -18,25 +18,25 @@ class BoardController extends Controller
     {
         $user = auth()->user();
 
-        // if (!$user) {
-        //     return response()->json([
-        //         "status" => 401,
-        //         "success" => false,
-        //         "message" => "User Belum Login",
-        //     ], 401);
-        // }
+        if (!$user) {
+            return response()->json([
+                "status" => 401,
+                "success" => false,
+                "message" => "User Belum Login",
+            ], 401);
+        }
 
-        $boards = Board::whereHas('permission', function ($query) use ($user) {
-            $query->where('user_id', $user->id);
-        })->orderBy('updated_at', 'desc')->get();
-
-        // if ($boards->isEmpty()) {
-        //     return response()->json([
-        //         "status" => 404,
-        //         "success" => false,
-        //         "message" => "Data Board Tidak Ada atau User Tidak Memiliki Permission",
-        //     ], 404);
-        // }
+        $boards = Board::where(function ($query) use ($user) {
+            $query->where('status', 'public')
+                ->orWhere(function ($q) use ($user) {
+                    $q->where('status', 'private')
+                        ->whereHas('permission', function ($subQuery) use ($user) {
+                            $subQuery->where('user_id', $user->id);
+                        });
+                });
+        })
+            ->orderBy('updated_at', 'desc')
+            ->get();
 
         return response()->json([
             "status" => 200,
@@ -45,6 +45,7 @@ class BoardController extends Controller
             "data" => $boards
         ], 200);
     }
+
 
 
     /**
@@ -129,14 +130,34 @@ class BoardController extends Controller
                 "status" => 400,
                 "success" => false,
                 "message" => "User Belum Login, Tidak Dapat Mengakses Board",
-            ]);
+            ], 400);
         }
 
-        $boards = Board::with('columns')->where('id', $board->id)->whereHas('permission', function ($query) use ($user) {
-            $query->where('user_id', $user->id);
-        })->first();
+        if ($board->status === 'public') {
+            $boardData = Board::with('columns')->find($board->id);
 
-        if (!$boards) {
+            if (!$boardData) {
+                return response()->json([
+                    "status" => 404,
+                    "success" => false,
+                    "message" => "Data Board Tidak Ada",
+                ], 404);
+            }
+
+            return response()->json([
+                "status" => 200,
+                "success" => true,
+                "message" => "Data Board",
+                "data" => $boardData
+            ], 200);
+        }
+
+        $boardWithPermission = Board::with('columns')->where('id', $board->id)
+            ->whereHas('permission', function ($query) use ($user) {
+                $query->where('user_id', $user->id);
+            })->first();
+
+        if (!$boardWithPermission) {
             return response()->json([
                 "status" => 404,
                 "success" => false,
@@ -148,9 +169,10 @@ class BoardController extends Controller
             "status" => 200,
             "success" => true,
             "message" => "Data Board",
-            "data" => $boards
+            "data" => $boardWithPermission
         ], 200);
     }
+
 
 
     public function showFourBoard()
@@ -184,11 +206,11 @@ class BoardController extends Controller
                 "message" => "Data Board",
                 "data" => $boards
             ], 200);
-        } catch (\Exception $e) { // Catch the exception properly
+        } catch (\Exception $e) {
             return response()->json([
                 "status" => 500,
                 "success" => false,
-                "message" => "Error: " . $e->getMessage(), // Return actual error message for debugging
+                "message" => "Error: " . $e->getMessage(),
             ], 500);
         }
     }

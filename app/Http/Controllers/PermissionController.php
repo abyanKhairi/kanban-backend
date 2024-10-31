@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Board;
 use App\Models\Permission;
 use Illuminate\Http\Request;
 
@@ -51,18 +52,30 @@ class PermissionController extends Controller
 
     public function ShowOnBoard(Request $request, $board_id)
     {
-        $user = auth("")->user();
+        $user = auth()->user();
 
-        $hasManageBoardPermission = Permission::where('user_id', $user->id)
-            ->where('board_id', $board_id)
-            ->exists();
+        $board = Board::find($board_id);
 
-        if (!$hasManageBoardPermission) {
+        if (!$board) {
             return response()->json([
-                'status' => 403,
+                'status' => 404,
                 'success' => false,
-                'message' => 'Tidak Ada Access',
-            ], 403);
+                'message' => 'Board Tidak Ditemukan',
+            ], 404);
+        }
+
+        if ($board->status === 'private') {
+            $hasManageBoardPermission = Permission::where('user_id', $user->id)
+                ->where('board_id', $board_id)
+                ->exists();
+
+            if (!$hasManageBoardPermission) {
+                return response()->json([
+                    'status' => 403,
+                    'success' => false,
+                    'message' => 'Tidak Ada Access',
+                ], 403);
+            }
         }
 
         $permissions = Permission::where('board_id', $board_id)
@@ -75,6 +88,7 @@ class PermissionController extends Controller
             'data' => $permissions,
         ]);
     }
+
 
     public function deleteUser(Request $request, $board_id, $permission_id)
     {

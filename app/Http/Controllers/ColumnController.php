@@ -26,16 +26,19 @@ class ColumnController extends Controller
             ], 400);
         }
 
-        $columns = column::with('task')->where('board_id', $board->id)->whereHas('board.permission', function ($query) use ($user) {
-            $query->where('user_id', $user->id);
-        })->orderBy('position', 'asc')->get();
-
-        if (!$columns) {
-            return response()->json([
-                "status" => 404,
-                "success" => false,
-                "message" => "Data Board Tidak Ada atau User Tidak Memiliki Permission",
-            ], 404);
+        if ($board->status === 'public') {
+            $columns = Column::with('task')
+                ->where('board_id', $board->id)
+                ->orderBy('position', 'asc')
+                ->get();
+        } else {
+            $columns = Column::with('task')
+                ->where('board_id', $board->id)
+                ->whereHas('board.permission', function ($query) use ($user) {
+                    $query->where('user_id', $user->id);
+                })
+                ->orderBy('position', 'asc')
+                ->get();
         }
 
         if ($columns->isEmpty()) {
@@ -55,6 +58,7 @@ class ColumnController extends Controller
             "data" => $columns
         ], 200);
     }
+
 
     /**
      * Store a newly created resource in storage.
