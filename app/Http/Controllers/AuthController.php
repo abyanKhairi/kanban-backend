@@ -237,8 +237,24 @@ class AuthController extends Controller
      */
     public function refresh()
     {
-        return $this->respondWithToken(auth()->refresh());
+        try {
+            $newToken = auth()->refresh();
+            return $this->respondWithToken($newToken);
+        } catch (\Tymon\JWTAuth\Exceptions\TokenExpiredException $e) {
+            return response()->json([
+                'status' => 401,
+                'success' => false,
+                'message' => 'Refresh token has expired. Please log in again.'
+            ], 401);
+        } catch (\Tymon\JWTAuth\Exceptions\JWTException $e) {
+            return response()->json([
+                'status' => 401,
+                'success' => false,
+                'message' => 'Token is invalid. Please log in again.'
+            ], 401);
+        }
     }
+
 
     /**
      * Get the token array structure.
