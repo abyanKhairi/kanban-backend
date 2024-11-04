@@ -238,6 +238,18 @@ class AuthController extends Controller
     public function refresh()
     {
         try {
+
+            $user = auth()->user();
+
+
+            if (!$user) {
+                return response()->json([
+                    "status" => 401,
+                    "success" => false,
+                    "message" => "User Belum Login",
+                ], 401);
+            }
+
             $newToken = auth()->refresh();
             return $this->respondWithToken($newToken);
         } catch (\Tymon\JWTAuth\Exceptions\TokenExpiredException $e) {
