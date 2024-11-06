@@ -164,6 +164,7 @@ class BoardController extends Controller
                 "message" => "Data Board Tidak Ada atau User Tidak Memiliki Permission",
             ], 404);
         }
+        $board->touch();
 
         return response()->json([
             "status" => 200,
